@@ -10,16 +10,16 @@ const Version = "v0.0.1"
 
 var Revision = "development"
 
-func NewVersionCmd(w *writer) *cobra.Command {
+func NewVersionCmd(o *RestartOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Show version",
 		Run: func(cmd *cobra.Command, args []string) {
-			versionCmd(w)
+			versionCmd(o)
 		},
 	}
 }
 
-func versionCmd(w *writer) {
-	fmt.Fprintf(w.out, "version: %s (rev: %s)\n", Version, Revision)
+func versionCmd(o *RestartOptions) {
+	fmt.Fprintf(o.outWriter, "version: %s (rev: %s)\n", Version, Revision)
 }
