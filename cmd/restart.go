@@ -15,10 +15,10 @@ const (
 type RestartOptions struct {
 	Objects    []string
 	Namespace  []string
-	EnableAll  bool
 	Enable     []string
-	DisableAll bool
 	Disable    []string
+	EnableAll  bool
+	DisableAll bool
 	outWriter  io.Writer
 	errWriter  io.Writer
 }
@@ -56,8 +56,8 @@ func NewRootCommand(option *RestartOptions) *cobra.Command {
 	fset.BoolVar(&option.EnableAll, "enable-all", false, "Enable all objects")
 	fset.StringSliceVar(&option.Enable, "enable", []string{}, "Enable objects names")
 
-	fset.BoolVar(&option.EnableAll, "disable-all", false, "Disable all objects")
-	fset.StringSliceVar(&option.Enable, "disable", []string{}, "Disable objects names")
+	fset.BoolVar(&option.DisableAll, "disable-all", false, "Disable all objects")
+	fset.StringSliceVar(&option.Disable, "disable", []string{}, "Disable objects names")
 
 	return cmd
 }
