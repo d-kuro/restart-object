@@ -20,6 +20,15 @@ workflows:
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+      - release:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
 
 commands:
   go_mod_download:
@@ -68,3 +77,13 @@ jobs:
       - run:
           name: run tests
           command: go test -race -v ./...
+
+  release:
+    executor:
+      name: golang
+    steps:
+      - checkout
+      - go_mod_download
+      - run:
+          name: run goreleaser
+          command: curl -sL https://git.io/goreleaser | bash
