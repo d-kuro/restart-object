@@ -1,0 +1,11 @@
+builds:
+  - main: main.go
+    binary: restart-object
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X github.com/d-kuro/restart-object/cmd.Revision={{ .ShortCommit }}
