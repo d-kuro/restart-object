@@ -94,7 +94,7 @@ spec:
       serviceAccountName: restart-object
       containers:
         - name: restart-object-job
-          image: daikurosawa/restart-object:latest
+          image: daikurosawa/restart-object:v0.0.1
           command:
             - ./restart-object
             - --in-cluster=true
@@ -114,7 +114,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: edit
+  name: restart-object
 subjects:
   - kind: ServiceAccount
     name: restart-object
