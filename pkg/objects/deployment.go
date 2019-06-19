@@ -1,9 +1,12 @@
 package objects
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/d-kuro/restart-object/pkg/logger"
+	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
@@ -41,6 +44,13 @@ func (d *DeploymentRestarter) List() ([]runtime.Object, error) {
 	for _, dep := range deployments.Items {
 		dep := dep
 		for _, container := range dep.Spec.Template.Spec.Containers {
+			container := container
+
+			logger.Logger().Info("get deployment",
+				zap.String("namespace", d.Namespace),
+				zap.String("deployment-name", dep.Name),
+				zap.String("image", container.Image))
+
 			tag := strings.Split(container.Image, ":")[1]
 			if tag == d.Tag {
 				objects[dep.Name] = &dep
@@ -48,9 +58,18 @@ func (d *DeploymentRestarter) List() ([]runtime.Object, error) {
 		}
 	}
 
+	if len(objects) == 0 {
+		return nil, errors.New("restart target not found")
+	}
+
 	if len(d.EnableSet) == 0 {
 		result := make([]runtime.Object, 0, len(objects))
-		for _, v := range objects {
+		for k, v := range objects {
+			logger.Logger().Info("restart target",
+				zap.String("deployment-name", k),
+				zap.String("namespace", d.Namespace),
+				zap.String("image-tag", d.Tag))
+
 			result = append(result, v)
 		}
 		return result, nil
@@ -59,6 +78,11 @@ func (d *DeploymentRestarter) List() ([]runtime.Object, error) {
 	result := make([]runtime.Object, 0)
 	for _, enable := range d.EnableSet {
 		if v, ok := objects[enable]; ok {
+			logger.Logger().Info("restart target",
+				zap.String("deployment-name", enable),
+				zap.String("namespace", d.Namespace),
+				zap.String("image-tag", d.Tag))
+
 			result = append(result, v)
 		}
 	}
@@ -79,28 +103,44 @@ func (d *DeploymentRestarter) Restart(objects []runtime.Object) error {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("restart success %s\n", result.Name)
+			logger.Logger().Info("restart success",
+				zap.String("namespace", result.Namespace),
+				zap.String("deployment-name", result.Name),
+				zap.String("image-tag", d.Tag))
+
 		case *extensionsv1beta1.Deployment:
 			result, err := d.ClientSet.ExtensionsV1beta1().Deployments(d.Namespace).
 				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("restart success %s\n", result.Name)
+			logger.Logger().Info("restart success",
+				zap.String("namespace", result.Namespace),
+				zap.String("deployment-name", result.Name),
+				zap.String("image-tag", d.Tag))
+
 		case *appsv1beta2.Deployment:
 			result, err := d.ClientSet.AppsV1beta1().Deployments(d.Namespace).
 				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("restart success %s\n", result.Name)
+			logger.Logger().Info("restart success",
+				zap.String("namespace", result.Namespace),
+				zap.String("deployment-name", result.Name),
+				zap.String("image-tag", d.Tag))
+
 		case *appsv1beta1.Deployment:
 			result, err := d.ClientSet.AppsV1beta2().Deployments(d.Namespace).
 				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("restart success %s\n", result.Name)
+			logger.Logger().Info("restart success",
+				zap.String("namespace", result.Namespace),
+				zap.String("deployment-name", result.Name),
+				zap.String("image-tag", d.Tag))
+
 		default:
 			return fmt.Errorf("restarting is not supported")
 		}

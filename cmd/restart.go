@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"fmt"
-	"io"
-
 	"github.com/d-kuro/restart-object/cmd/util"
+	"github.com/d-kuro/restart-object/pkg/logger"
 	"github.com/d-kuro/restart-object/pkg/objects"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 const (
@@ -23,17 +22,17 @@ type RestartOptions struct {
 	EnableAll  bool
 	DisableAll bool
 	InCluster  bool
-	outWriter  io.Writer
-	errWriter  io.Writer
 }
 
-func Execute(outWriter, errWriter io.Writer) int {
-	option := NewRestartOptions(outWriter, errWriter)
+func Execute() int {
+	logger.Init(logger.Writer)
+
+	option := NewRestartOptions()
 	cmd := NewRootCommand(option)
 	addCommands(cmd, option)
 
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintln(errWriter, err)
+		logger.Logger().Error("Error", zap.Error(err))
 		return exitCodeErr
 	}
 	return exitCodeOK
@@ -47,12 +46,15 @@ func addCommands(rootCmd *cobra.Command, o *RestartOptions) {
 
 func NewRootCommand(option *RestartOptions) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "restart-object",
-		Short: "Restart Kubernetes Object",
+		Use:           "restart-object",
+		Short:         "Restart Kubernetes Object",
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(option)
 		},
 	}
+
 	fset := cmd.Flags()
 	fset.BoolVar(&option.InCluster, "in-cluster", false, "Execute for in Kubernetes cluster")
 
@@ -69,11 +71,8 @@ func NewRootCommand(option *RestartOptions) *cobra.Command {
 	return cmd
 }
 
-func NewRestartOptions(outWriter, errWriter io.Writer) *RestartOptions {
-	return &RestartOptions{
-		outWriter: outWriter,
-		errWriter: errWriter,
-	}
+func NewRestartOptions() *RestartOptions {
+	return &RestartOptions{}
 }
 
 func run(option *RestartOptions) error {
@@ -85,8 +84,10 @@ func run(option *RestartOptions) error {
 	var f util.Factory
 	if option.InCluster {
 		f = util.NewInClusterFactory()
+		logger.Logger().Info("execute place: in-cluster")
 	} else {
 		f = util.NewLocalFactory()
+		logger.Logger().Info("execute place: local")
 	}
 
 	cs, err := f.ClientSet()
