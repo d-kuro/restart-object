@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restart-object-job
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      serviceAccountName: restart-object
+      containers:
+        - name: restart-object-job
+          image: daikurosawa/restart-object:latest
+          command:
+            - ./restart-object
+            - --in-cluster=true
+            - --tag=latest
+      restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: restart-object
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: restart-object
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit
+subjects:
+  - kind: ServiceAccount
+    name: restart-object
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: restart-object
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["list", "patch"]
+  - apiGroups: ["extensions"]
+    resources: ["deployments"]
+    verbs: ["list", "patch"]
