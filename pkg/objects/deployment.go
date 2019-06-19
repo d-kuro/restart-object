@@ -74,25 +74,29 @@ func (d *DeploymentRestarter) Restart(objects []runtime.Object) error {
 
 		switch obj := obj.(type) {
 		case *appsv1.Deployment:
-			result, err := d.ClientSet.AppsV1().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			result, err := d.ClientSet.AppsV1().Deployments(d.Namespace).
+				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("restart success %s\n", result.Name)
 		case *extensionsv1beta1.Deployment:
-			result, err := d.ClientSet.ExtensionsV1beta1().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			result, err := d.ClientSet.ExtensionsV1beta1().Deployments(d.Namespace).
+				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("restart success %s\n", result.Name)
 		case *appsv1beta2.Deployment:
-			result, err := d.ClientSet.AppsV1beta1().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			result, err := d.ClientSet.AppsV1beta1().Deployments(d.Namespace).
+				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("restart success %s\n", result.Name)
 		case *appsv1beta1.Deployment:
-			result, err := d.ClientSet.AppsV1beta2().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			result, err := d.ClientSet.AppsV1beta2().Deployments(d.Namespace).
+				Patch(obj.Name, types.StrategicMergePatchType, b)
 			if err != nil {
 				return err
 			}
