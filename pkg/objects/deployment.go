@@ -5,6 +5,9 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -76,6 +79,26 @@ func (d *DeploymentRestarter) Restart(objects []runtime.Object) error {
 				return err
 			}
 			fmt.Printf("restart success %s\n", result.Name)
+		case *extensionsv1beta1.Deployment:
+			result, err := d.ClientSet.ExtensionsV1beta1().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("restart success %s\n", result.Name)
+		case *appsv1beta2.Deployment:
+			result, err := d.ClientSet.AppsV1beta1().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("restart success %s\n", result.Name)
+		case *appsv1beta1.Deployment:
+			result, err := d.ClientSet.AppsV1beta2().Deployments(d.Namespace).Patch(obj.Name, types.StrategicMergePatchType, b)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("restart success %s\n", result.Name)
+		default:
+			return fmt.Errorf("restarting is not supported")
 		}
 	}
 	return nil
