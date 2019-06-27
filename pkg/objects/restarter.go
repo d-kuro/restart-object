@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kubernetes/kubernetes/pkg/kubectl/scheme"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/kubernetes/pkg/kubectl/scheme"
 )
 
 func objectRestarter(obj runtime.Object) ([]byte, error) {
