@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const Version = "v0.0.1"
+const Version = "v0.0.2"
 
 var Revision = "development"
 
-func NewVersionCmd(o *RestartOptions) *cobra.Command {
+func NewVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Show version",
