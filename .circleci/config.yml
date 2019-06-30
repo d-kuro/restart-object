@@ -67,7 +67,8 @@ jobs:
               --tests \
               --enable-all \
               --disable gochecknoglobals \
-              --disable gochecknoinits
+              --disable gochecknoinits \
+              --disable dupl
   test:
     executor:
       name: golang

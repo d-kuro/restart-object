@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -20,16 +19,17 @@ type DaemonSetRestarter struct {
 	ClientSet kubernetes.Interface
 	Namespace string
 	Tag       string
-	EnableSet []string
+	Enable    []string
+	Disable   []string
 }
 
-func NewDaemonSetRestarter(clientSet kubernetes.Interface,
-	namespace string, tag string, enableSet []string) Restarter {
+func NewDaemonSetRestarter(cs kubernetes.Interface, namespace string, tag string, enable, disable []string) Restarter {
 	return &DaemonSetRestarter{
-		ClientSet: clientSet,
+		ClientSet: cs,
 		Namespace: namespace,
 		Tag:       tag,
-		EnableSet: enableSet,
+		Enable:    enable,
+		Disable:   disable,
 	}
 }
 
@@ -40,52 +40,26 @@ func (d *DaemonSetRestarter) List() ([]runtime.Object, error) {
 	}
 
 	objects := make(map[string]runtime.Object)
-	for _, dep := range daemonsets.Items {
-		dep := dep
-		for _, container := range dep.Spec.Template.Spec.Containers {
+	for _, ds := range daemonsets.Items {
+		ds := ds
+		for _, container := range ds.Spec.Template.Spec.Containers {
 			container := container
 
-			logger.Logger().Info("get daemonset",
-				zap.String("namespace", d.Namespace),
-				zap.String("daemonset-name", dep.Name),
+			logger.Logger().Info("get object",
+				zap.String("kind", ds.Kind),
+				zap.String("apiVersion", ds.APIVersion),
+				zap.String("name", ds.Name),
+				zap.String("namespace", ds.Namespace),
 				zap.String("image", container.Image))
 
 			tag := strings.Split(container.Image, ":")[1]
 			if tag == d.Tag {
-				objects[dep.Name] = &dep
+				objects[ds.Name] = &ds
 			}
 		}
 	}
 
-	if len(objects) == 0 {
-		return nil, errors.New("restart target not found")
-	}
-
-	if len(d.EnableSet) == 0 {
-		result := make([]runtime.Object, 0, len(objects))
-		for k, v := range objects {
-			logger.Logger().Info("restart target",
-				zap.String("daemonset-name", k),
-				zap.String("namespace", d.Namespace),
-				zap.String("image-tag", d.Tag))
-
-			result = append(result, v)
-		}
-		return result, nil
-	}
-
-	result := make([]runtime.Object, 0)
-	for _, enable := range d.EnableSet {
-		if v, ok := objects[enable]; ok {
-			logger.Logger().Info("restart target",
-				zap.String("daemonset-name", enable),
-				zap.String("namespace", d.Namespace),
-				zap.String("image-tag", d.Tag))
-
-			result = append(result, v)
-		}
-	}
-	return result, nil
+	return PickValidObjects(objects, d.Enable, d.Disable)
 }
 
 func (d *DaemonSetRestarter) Restart(objects []runtime.Object) error {

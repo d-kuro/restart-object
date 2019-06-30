@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -21,16 +20,17 @@ type DeploymentRestarter struct {
 	ClientSet kubernetes.Interface
 	Namespace string
 	Tag       string
-	EnableSet []string
+	Enable    []string
+	Disable   []string
 }
 
-func NewDeploymentRestarter(clientSet kubernetes.Interface,
-	namespace string, tag string, enableSet []string) Restarter {
+func NewDeploymentRestarter(cs kubernetes.Interface, namespace string, tag string, enable, disable []string) Restarter {
 	return &DeploymentRestarter{
-		ClientSet: clientSet,
+		ClientSet: cs,
 		Namespace: namespace,
 		Tag:       tag,
-		EnableSet: enableSet,
+		Enable:    enable,
+		Disable:   disable,
 	}
 }
 
@@ -46,9 +46,11 @@ func (d *DeploymentRestarter) List() ([]runtime.Object, error) {
 		for _, container := range dep.Spec.Template.Spec.Containers {
 			container := container
 
-			logger.Logger().Info("get deployment",
-				zap.String("namespace", d.Namespace),
-				zap.String("deployment-name", dep.Name),
+			logger.Logger().Info("get object",
+				zap.String("kind", dep.Kind),
+				zap.String("apiVersion", dep.APIVersion),
+				zap.String("name", dep.Name),
+				zap.String("namespace", dep.Namespace),
 				zap.String("image", container.Image))
 
 			tag := strings.Split(container.Image, ":")[1]
@@ -58,35 +60,7 @@ func (d *DeploymentRestarter) List() ([]runtime.Object, error) {
 		}
 	}
 
-	if len(objects) == 0 {
-		return nil, errors.New("restart target not found")
-	}
-
-	if len(d.EnableSet) == 0 {
-		result := make([]runtime.Object, 0, len(objects))
-		for k, v := range objects {
-			logger.Logger().Info("restart target",
-				zap.String("deployment-name", k),
-				zap.String("namespace", d.Namespace),
-				zap.String("image-tag", d.Tag))
-
-			result = append(result, v)
-		}
-		return result, nil
-	}
-
-	result := make([]runtime.Object, 0)
-	for _, enable := range d.EnableSet {
-		if v, ok := objects[enable]; ok {
-			logger.Logger().Info("restart target",
-				zap.String("deployment-name", enable),
-				zap.String("namespace", d.Namespace),
-				zap.String("image-tag", d.Tag))
-
-			result = append(result, v)
-		}
-	}
-	return result, nil
+	return PickValidObjects(objects, d.Enable, d.Disable)
 }
 
 func (d *DeploymentRestarter) Restart(objects []runtime.Object) error {

@@ -76,7 +76,7 @@ func NewRestartOptions() *RestartOptions {
 }
 
 func run(o *RestartOptions) error {
-	enableSet, err := EnableSetBuild(o)
+	enable, disable, err := EnableSetBuild(o)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func run(o *RestartOptions) error {
 	}
 
 	r := objects.NewRestarterInitializers()
-	restarter := r[o.Object](cs, o.Namespace, o.Tag, enableSet)
+	restarter := r[o.Object](cs, o.Namespace, o.Tag, enable, disable)
 	objects, err := restarter.List()
 	if err != nil {
 		return err

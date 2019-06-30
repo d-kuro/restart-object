@@ -10,7 +10,7 @@ type Restarter interface {
 	Restart(objects []runtime.Object) error
 }
 
-type NewRestarterFunc func(clientSet kubernetes.Interface, namespace string, tag string, enableSet []string) Restarter
+type NewRestarterFunc func(cs kubernetes.Interface, namespace string, tag string, enable, disable []string) Restarter
 
 func NewRestarterInitializers() map[string]NewRestarterFunc {
 	restarters := make(map[string]NewRestarterFunc, 2)
