@@ -94,7 +94,7 @@ spec:
       serviceAccountName: restart-object
       containers:
         - name: restart-object-job
-          image: daikurosawa/restart-object:v0.0.1
+          image: daikurosawa/restart-object:v0.0.2
           command:
             - ./restart-object
             - --in-cluster=true
@@ -126,16 +126,15 @@ metadata:
   name: restart-object
 rules:
   - apiGroups: ["apps"]
-    resources: ["deployments"]
+    resources: ["deployments", "daemonsets"]
     verbs: ["list", "patch"]
   - apiGroups: ["extensions"]
-    resources: ["deployments"]
+    resources: ["deployments", "daemonsets"]
     verbs: ["list", "patch"]
 ```
 
 ## TODO
 
-* [ ] Support DaemonSet restart
 * [ ] Support StatefulSet restart
 * [ ] Add tests
 * [ ] Support server side apply
