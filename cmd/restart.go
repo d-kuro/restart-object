@@ -27,9 +27,9 @@ type RestartOptions struct {
 func Execute() int {
 	logger.Init(logger.Writer)
 
-	option := NewRestartOptions()
-	cmd := NewRootCommand(option)
-	addCommands(cmd, option)
+	o := NewRestartOptions()
+	cmd := NewRootCommand(o)
+	addCommands(cmd)
 
 	if err := cmd.Execute(); err != nil {
 		logger.Logger().Error("Error", zap.Error(err))
@@ -38,35 +38,35 @@ func Execute() int {
 	return exitCodeOK
 }
 
-func addCommands(rootCmd *cobra.Command, o *RestartOptions) {
+func addCommands(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(
-		NewVersionCmd(o),
+		NewVersionCmd(),
 	)
 }
 
-func NewRootCommand(option *RestartOptions) *cobra.Command {
+func NewRootCommand(o *RestartOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "restart-object",
 		Short:         "Restart Kubernetes Object",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(option)
+			return run(o)
 		},
 	}
 
 	fset := cmd.Flags()
-	fset.BoolVar(&option.InCluster, "in-cluster", false, "Execute for in Kubernetes cluster")
+	fset.BoolVar(&o.InCluster, "in-cluster", false, "Execute for in Kubernetes cluster")
 
-	fset.StringVar(&option.Object, "objects", "deployment", "Restart objects")
-	fset.StringVar(&option.Namespace, "namespace", "default", "Namespace")
-	fset.StringVar(&option.Tag, "tag", "latest", "Target to restart image tag name")
+	fset.StringVar(&o.Object, "objects", "deployment", "Restart objects")
+	fset.StringVar(&o.Namespace, "namespace", "default", "Namespace")
+	fset.StringVar(&o.Tag, "tag", "latest", "Target to restart image tag name")
 
-	fset.BoolVar(&option.EnableAll, "enable-all", false, "Enable all objects")
-	fset.StringSliceVar(&option.Enable, "enable", []string{}, "Enable objects names")
+	fset.BoolVar(&o.EnableAll, "enable-all", false, "Enable all objects")
+	fset.StringSliceVar(&o.Enable, "enable", []string{}, "Enable objects names")
 
-	fset.BoolVar(&option.DisableAll, "disable-all", false, "Disable all objects")
-	fset.StringSliceVar(&option.Disable, "disable", []string{}, "Disable objects names")
+	fset.BoolVar(&o.DisableAll, "disable-all", false, "Disable all objects")
+	fset.StringSliceVar(&o.Disable, "disable", []string{}, "Disable objects names")
 
 	return cmd
 }
@@ -75,14 +75,14 @@ func NewRestartOptions() *RestartOptions {
 	return &RestartOptions{}
 }
 
-func run(option *RestartOptions) error {
-	enableSet, err := EnableSetBuild(option)
+func run(o *RestartOptions) error {
+	enableSet, err := EnableSetBuild(o)
 	if err != nil {
 		return err
 	}
 
 	var f util.Factory
-	if option.InCluster {
+	if o.InCluster {
 		f = util.NewInClusterFactory()
 		logger.Logger().Info("execute place: in-cluster")
 	} else {
@@ -95,12 +95,13 @@ func run(option *RestartOptions) error {
 		return err
 	}
 
-	deployment := objects.NewDeploymentRestarter(cs, option.Namespace, option.Tag, enableSet)
-	objects, err := deployment.List()
+	r := objects.NewRestarterInitializers()
+	restarter := r[o.Object](cs, o.Namespace, o.Tag, enableSet)
+	objects, err := restarter.List()
 	if err != nil {
 		return err
 	}
-	if err := deployment.Restart(objects); err != nil {
+	if err := restarter.Restart(objects); err != nil {
 		return err
 	}
 
