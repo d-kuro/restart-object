@@ -7,5 +7,24 @@ builds:
       - linux
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
     ldflags:
       - -s -w -X github.com/d-kuro/restart-object/cmd.Revision={{ .ShortCommit }}
+checksum:
+  name_template: checksums.txt
+archive:
+  format: binary
+snapshot:
+  name_template: master
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "Merge pull request"
+      - "Merge branch"
+release:
+  github:
+    owner: d-kuro
+    name: restart-object
