@@ -4,15 +4,11 @@ go 1.12
 
 require (
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/spf13/cobra v0.0.7
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	k8s.io/api v0.0.0
+	k8s.io/api v0.18.5
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kubernetes v1.15.3
